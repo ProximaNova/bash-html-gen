@@ -40,10 +40,10 @@ TZ=UTC stat "$filedir" >> file_meta.txt; TZ=UTC stat -t "$filedir" >> file_meta.
 date -u +%Y-%m-%dT%H:%M:%S.%NZ; mv -n "$file" .; date -u +%Y-%m-%dT%H:%M:%S.%NZ
 
 # Write title to JSON
-echo -n "{\"title\":\"$title\"," >> file_meta.json
+echo -n "{\"title\":\"$(echo $title | sed "s/\"/\\\\\"/g")\"," >> file_meta.json
 
 # Write tags to JSON
-echo -n "\"tags\":\"$tags\"," >> file_meta.json
+echo -n "\"tags\":\"$(echo $tags | sed "s/\"/\\\\\"/g")\"," >> file_meta.json
 
 # Write description to JSON
 echo -n "\"description\":\"$(echo $desc | sed "s/\"/\\\\\"/g")\"," >> file_meta.json
@@ -90,7 +90,7 @@ sed -i "s/TYPE1<\/div-->/$type<\/div>/g" index.html
 if [ ! -z "$dirnobase" ]; then sed -i "s/<\x21--br><div>In folder/<br><div>In folder/g" index.html; sed -i "s/DIR1<\/div-->/$dirnobase<\/div><div>In index | <a href=\"..\/$indexindexsafe\">..\/$indexindexsafe<\/a><\/div>/g" index.html; fi
 
 # Create index of index for today if that folder and file doesn't exist
-mkdir -p ../$indexindex; stat -t ../$indexindex/index.html || echo -e '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Index of generated HTMLs</title></head><body><h1>Index of generated HTMLs</h1>\n<ul>\n<!--next-->\n</ul>\n</body></html>' >> ../$indexindex/index.html
+mkdir -p ../$indexindex; stat -t ../$indexindex/index.html || echo -e '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Index of generated HTMLs</title></head><body><h1>Index of generated HTMLs</h1>\n<ul><li><a href="..">.. [go up one folder]</a></li>\n<!--next-->\n</ul>\n</body></html>' >> ../$indexindex/index.html
 
 # Write entry for this in index of index
 indexinfo="$(cat file_meta.json | jq | grep -v "\"title\"\|\"folder\"" | tail -n+2 | head -n-1 | sed "s/^\s*//g" | perl -pE "s/\n/ /g" | sed "s/, $//g" | xxd -ps | tr -d \\n | perl -pE "s/(..)/\\\\&#x00\1;/g")"
