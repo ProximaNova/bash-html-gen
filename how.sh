@@ -1,7 +1,10 @@
 #!/bin/bash
-# single file: image, software, (mp4) video, text
-# todo: audio, data
+# single file: image, software, (mp4) video, text, data
+# todo: audio
 # Run this script: ". ../how.sh" -- see https://superuser.com/questions/1381398/changing-directory-in-script-doesnt-change-directory-why
+# Option 1: no options or ". ../how.sh move" = moves file to current directory
+# Option 2: ". ../how.sh link" = makes a hardlink to file to current folder,
+# only use this where source and destination are in the same storage device
 
 # Get file path
 read -p "file: " file
@@ -42,11 +45,21 @@ TZ=UTC stat "$file" >> file_meta.txt; TZ=UTC stat -t "$file" >> file_meta.txt
 filedir=$(echo $file | sed "s/\/[^\/]*$//g")
 TZ=UTC stat "$filedir" >> file_meta.txt; TZ=UTC stat -t "$filedir" >> file_meta.txt
 
+# Check if an argument is provided
+if [ "$1" == "move" ]; then
+    date -u +%Y-%m-%dT%H:%M:%S.%NZ; mv -n "$file" .; date -u +%Y-%m-%dT%H:%M:%S.%NZ
+elif [ "$1" == "link" ]; then
+    # Make a hardlink to the file in current directory
+    # WARNING: will result in "ln: failed to create hard link ./file => /path/file: Invalid cross-device link"
+    # if the source and destination are two different storage devices, like to different HDDs
+    date -u +%Y-%m-%dT%H:%M:%S.%NZ; ln "$file" "./$filenobase"; date -u +%Y-%m-%dT%H:%M:%S.%NZ
+else
+    # No argument provided, default is to MOVE file to current directory
+    date -u +%Y-%m-%dT%H:%M:%S.%NZ; mv -n "$file" .; date -u +%Y-%m-%dT%H:%M:%S.%NZ
+fi
+
 # Make a hardlink to the file in current directory
 #date -u +%Y-%m-%dT%H:%M:%S.%NZ; ln "$file" "./$filenobase"; date -u +%Y-%m-%dT%H:%M:%S.%NZ
-# ^was:
-# MOVE file to current directory
-date -u +%Y-%m-%dT%H:%M:%S.%NZ; mv -n "$file" .; date -u +%Y-%m-%dT%H:%M:%S.%NZ
 
 # Write title to JSON
 echo -n "{\"title\":\"$(echo $title | sed "s/\"/\\\\\"/g")\"," >> file_meta.json
