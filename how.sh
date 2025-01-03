@@ -1,25 +1,26 @@
 #!/bin/bash
 # single file: image, software, (mp4) video, text, data
 # todo: audio
-# Run this script: ". ../how.sh" -- see https://superuser.com/questions/1381398/changing-directory-in-script-doesnt-change-directory-why
+# Run this script: ". ../how.sh" ( https://superuser.com/questions/1381398 )
 # Option 1: no options or ". ../how.sh move" = moves file to current directory.
 # Option 2: ". ../how.sh link" = makes a hardlink to file in current folder,
 # only use this where source and destination are in the same storage device.
 # Option 3: ". ../how.sh copy" = copies file into current directory.
+# Option 4: ". ../how.sh last" = same as copy, but doesn't make a new empty folder.
 
 # Get file path
 read -p "file: " file
-file=$(echo "$file" | sed "s/^file:\/\///g")
+file="$(echo "$file" | sed "s/^file:\/\///g")"
 
 # Get filename
-filenobase=$(echo $file | sed "s/.*\///g")
+filenobase="$(echo "$file" | sed "s/.*\///g")"
 
 # Get name of current folder
 dirnobase="$(pwd | sed "s/.*\///g")"
 
 # Get title
 # Safe characters: 0-9, a-z, A-Z
-# Unsafe characters: not /[0-9a-zA-Z]/, such as .,/?;:'"{[}]=+-_)(*&^%$#@!`~\|
+# Unsafe characters: not /[0-9a-zA-Z]/, such as .,/?;:'"{[}]=+-_)(*&^%$#@!`~\|<>
 # Map:
 # .  ,  /  ?  ;  :  "  {  [  }  ]  =  +  -  _  )  (  *  &  ^  %  $  #  @  !  `  ~  \  |  '  <  >
 # 2e 2c 2f 3f 3b 3a 22 7b 5b 7d 5d 3d 2b 2d 5f 29 28 2a 26 5e 25 24 23 40 21 60 7e 5c 7c 27 3c 3e
@@ -43,7 +44,7 @@ type=$(echo $type | sed "s/^w$/web/g")
 
 # Write file metadata to text file
 TZ=UTC stat "$file" >> file_meta.txt; TZ=UTC stat -t "$file" >> file_meta.txt
-filedir=$(echo $file | sed "s/\/[^\/]*$//g")
+filedir="$(echo "$file" | sed "s/\/[^\/]*$//g")"
 TZ=UTC stat "$filedir" >> file_meta.txt; TZ=UTC stat -t "$filedir" >> file_meta.txt
 
 # Check if an argument is provided
@@ -54,15 +55,12 @@ elif [ "$1" == "link" ]; then
     # WARNING: will result in "ln: failed to create hard link ./file => /path/file: Invalid cross-device link"
     # if the source and destination are two different storage devices, like to different HDDs
     date -u +%Y-%m-%dT%H:%M:%S.%NZ; ln "$file" "./$filenobase"; date -u +%Y-%m-%dT%H:%M:%S.%NZ
-elif [ "$1" == "copy" ]; then
+elif [ "$1" == "copy" ] || [ "$1" == "last" ]; then
     date -u +%Y-%m-%dT%H:%M:%S.%NZ; cp --update=none "$file" "./$filenobase"; date -u +%Y-%m-%dT%H:%M:%S.%NZ
 else
     # No argument provided, default is to MOVE file to current directory
     date -u +%Y-%m-%dT%H:%M:%S.%NZ; mv -n "$file" .; date -u +%Y-%m-%dT%H:%M:%S.%NZ
 fi
-
-# Make a hardlink to the file in current directory
-#date -u +%Y-%m-%dT%H:%M:%S.%NZ; ln "$file" "./$filenobase"; date -u +%Y-%m-%dT%H:%M:%S.%NZ
 
 # Write title to JSON
 echo -n "{\"title\":\"$(echo $title | sed "s/\"/\\\\\"/g")\"," >> file_meta.json
@@ -82,7 +80,7 @@ echo "\"folder\":\"$dirnobase\"}" >> file_meta.json
 # Copy template HTML to current folder
 cp --update=none ../template.htm index.html
 
-# If type is software or text then write: "Cannot preview file"
+# If type is software, text, or data then write: "Cannot preview file"
 if [ "$type" == "software" ] || [ "$type" == "text" ] || [ "$type" == "data" ]; then sed -i "s/img src=\"IMAGE1\" alt=\"\" \//b>Cannot preview file.<\/b/g" index.html; fi
 
 # If type is video then write VIDEO element
@@ -121,5 +119,7 @@ mkdir -p ../$indexindex; stat -t ../$indexindex/index.html || echo -e '<!DOCTYPE
 indexinfo="$(cat file_meta.json | jq | grep -v "\"title\"\|\"folder\"" | tail -n+2 | head -n-1 | sed "s/^\s*//g" | perl -pE "s/\n/ /g" | sed "s/, $//g" | perl -pE "s/\x5c/1734216500x005c1734217364/g" | sed "s/\./1734216500x002e1734217364/g" | sed "s/,/1734216500x002c1734217364/g" | sed "s/\//1734216500x002f1734217364/g" | sed "s/?/1734216500x003f1734217364/g" | sed "s/;/1734216500x003b1734217364/g" | sed "s/:/1734216500x003a1734217364/g" | sed "s/\"/1734216500x00221734217364/g" | sed "s/{/1734216500x007b1734217364/g" | sed "s/\[/1734216500x005b1734217364/g" | sed "s/}/1734216500x007d1734217364/g" | sed "s/\]/1734216500x005d1734217364/g" | sed "s/=/1734216500x003d1734217364/g" | sed "s/+/1734216500x002b1734217364/g" | sed "s/\^/1734216500x005e1734217364/g" | sed "s/%/1734216500x00251734217364/g" | sed 's/\$/1734216500x00241734217364/g' | sed "s/@/1734216500x00401734217364/g" | sed 's/!/1734216500x00211734217364/g' | sed "s/\`/1734216500x00601734217364/g" | sed "s/~/1734216500x007e1734217364/g" | sed "s/</1734216500x003c1734217364/g" | sed "s/>/1734216500x003e1734217364/g" | sed "s/|/1734216500x007c1734217364/g" | sed "s/'/1734216500x00271734217364/g" | sed "s/&/1734216500x00261734217364/g" | sed "s/#/1734216500x00231734217364/g" | sed "s/-/1734216500x002d1734217364/g" | sed "s/_/1734216500x005f1734217364/g" | sed "s/)/1734216500x00291734217364/g" | sed "s/(/1734216500x00281734217364/g" | sed "s/\*/1734216500x002a1734217364/g" | sed "s/1734216500/\\\\\&#/g" | sed "s/1734217364/;/g")"
 sed -i "s/<\x21--next-->/<li>$dirnobase: <a href=\"..\/..\/..\/$dirnobase\">$titlesafe<\/a> - $indexinfo<\/li>\n<\x21--next-->/g" ../$indexindex/index.html
 
-# Create next empty folder and go into it
-cd ..; newemptyfolder=$(date +%s.%N); mkdir $newemptyfolder; cd $newemptyfolder
+# Create next empty folder and go in to it
+if [ ! "$1" == "last" ]; then
+    cd ..; newemptyfolder=$(date +%s.%N); mkdir $newemptyfolder; cd $newemptyfolder
+fi
