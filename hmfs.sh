@@ -10,10 +10,10 @@ newcid=$(echo "$newcid" | sed "s/^\/ipfs\///g" | sed "s/^/\/ipfs\//g")
 diff() {
     local f="$1"
     echo $f
-    echo -n "older: "; ipfs files stat $oldmfs/$f | head -n1
-    echo -n "newer: "; ipfs resolve $newcid/$f | sed "s/^\/ipfs\///g"
-    ipfs files rm $oldmfs/$f
-    ipfs files cp $newcid/$f $oldmfs/$f
+    echo -n "older: "; ipfs files stat "$oldmfs/$f" | head -n1
+    echo -n "newer: "; ipfs resolve "$newcid/$f" | sed "s/^\/ipfs\///g"
+    ipfs files rm "$oldmfs/$f"
+    ipfs files cp "$newcid/$f" "$oldmfs/$f"
 }
 
 diff versions.txt
@@ -29,13 +29,13 @@ echo "Copying folders from CID to MFS..."
 ipfs ls -s --size=false $newcid | grep "/" | grep -Ev " [0-9]{4}/" | sed "s/\/$//g" | oldmfs="$oldmfs" xargs -d "\n" sh -c 'for args do c=$(echo $args | sed "s/ .*//g"); d=$(echo $args | sed "s/.* //g"); ipfs files cp /ipfs/$c $oldmfs/$d; done' _
 echo "Done."
 
-echo "Copying single new day folder to MFS..."
+echo "Copying new day folder(s) to MFS..."
 year=$(ipfs ls -s --size=false $newcid | grep -E " [0-9]{4}/" | sed "s/.* //g" | sed "s/\/$//g")
 ipfs files cp $newcid/$year $oldmfs/$year
 month=$(ipfs ls -s --size=false $newcid/$year | grep -E " [0-9]{2}/| [0-9]{1}/" | sed "s/.* //g" | sed "s/\/$//g")
 ipfs files cp $newcid/$year/$month $oldmfs/$year/$month
-day=$(ipfs ls -s --size=false $newcid/$year/$month | grep -E " [0-9]{2}/| [0-9]{1}/" | sed "s/.* //g" | sed "s/\/$//g")
-ipfs files cp $newcid/$year/$month/$day $oldmfs/$year/$month/$day
+day=($(ipfs ls -s --size=false $newcid/$year/$month | grep -E " [0-9]{2}/| [0-9]{1}/" | sed "s/.* //g" | sed "s/\/$//g" | perl -pE "s/\n/ /g" | sed "s/ $//g"))
+for days in "${day[@]}"; do ipfs files cp $newcid/$year/$month/$days $oldmfs/$year/$month/$days; done
 echo "Done."
 
 echo "Updating versions.txt..."
