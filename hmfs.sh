@@ -48,4 +48,5 @@ newversion() { ipfs files read $oldmfs/versions.txt; echo $newmfs; }
 newversion | ipfs files write --create --raw-leaves "$oldmfs/versions0.txt"
 ipfs files rm "$oldmfs/versions.txt"
 ipfs files mv "$oldmfs/versions0.txt" "$oldmfs/versions.txt"
+echo "Suggested: run \"ipfs files read $oldmfs/versions.txt > versions.txt\" to update the non-IPFS copy of that file."
 echo "Done."
