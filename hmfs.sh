@@ -23,7 +23,7 @@ diff README.md
 diff LICENSE.txt
 diff how.sh
 diff hmfs.sh
-diff years.htm
+diff index.html
 
 echo "Copying folders from CID to MFS..."
 ipfs ls -s --size=false $newcid | grep "/" | grep -Ev " [0-9]{4}/" | sed "s/\/$//g" | oldmfs="$oldmfs" xargs -d "\n" sh -c 'for args do c=$(echo $args | sed "s/ .*//g"); d=$(echo $args | sed "s/.* //g"); ipfs files cp /ipfs/$c $oldmfs/$d; done' _
